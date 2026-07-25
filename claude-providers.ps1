@@ -28,4 +28,13 @@ function claude-deepseek {
     claude @args
 }
 
-Write-Host "Claude Code provider commands loaded: claude-qwen | claude-kimi | claude-deepseek" -ForegroundColor Green
+# DeepSeek Reasoner (thinking model); fast/background calls use deepseek-chat.
+function claude-dsr {
+    $env:ANTHROPIC_BASE_URL         = 'http://31.97.35.212:8000'
+    $env:ANTHROPIC_AUTH_TOKEN       = [Environment]::GetEnvironmentVariable('DEEPSEEK_TOKEN','User')
+    $env:ANTHROPIC_MODEL            = 'deepseek-reasoner'
+    $env:ANTHROPIC_SMALL_FAST_MODEL = 'deepseek-chat'
+    claude @args
+}
+
+Write-Host "Claude Code provider commands loaded: claude-qwen | claude-kimi | claude-deepseek | claude-dsr" -ForegroundColor Green

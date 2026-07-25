@@ -15,6 +15,7 @@ provider — nothing is shared or stored.
 | `claude-qwen` | Qwen3-Coder (`qwen3-coder-plus`) | Qwen |
 | `claude-kimi` | Kimi | Kimi |
 | `claude-deepseek` | DeepSeek Chat | DeepSeek |
+| `claude-dsr` | DeepSeek Reasoner (thinking) | DeepSeek |
 
 ---
 
@@ -58,7 +59,8 @@ Open a **new terminal**, `cd` into your project, then:
 ```bash
 claude-qwen        # Qwen3-Coder
 claude-kimi        # Kimi
-claude-deepseek    # DeepSeek
+claude-deepseek    # DeepSeek Chat
+claude-dsr         # DeepSeek Reasoner (thinking)
 ```
 
 ---

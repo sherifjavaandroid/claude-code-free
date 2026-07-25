@@ -39,7 +39,8 @@ cat >> "$RC" <<'BLOCK'
 # >>> claude-code-free >>>
 claude-qwen()     { ANTHROPIC_BASE_URL=http://31.97.35.212:8001 ANTHROPIC_AUTH_TOKEN="$QWEN_TOKEN"     ANTHROPIC_MODEL=qwen3-coder-plus ANTHROPIC_SMALL_FAST_MODEL=qwen3-coder-plus claude "$@"; }
 claude-kimi()     { ANTHROPIC_BASE_URL=http://31.97.35.212:8066 ANTHROPIC_AUTH_TOKEN="$KIMI_TOKEN"     ANTHROPIC_MODEL=kimi             ANTHROPIC_SMALL_FAST_MODEL=kimi             claude "$@"; }
-claude-deepseek() { ANTHROPIC_BASE_URL=http://31.97.35.212:8000 ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_TOKEN" ANTHROPIC_MODEL=deepseek-chat    ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat    claude "$@"; }
+claude-deepseek() { ANTHROPIC_BASE_URL=http://31.97.35.212:8000 ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_TOKEN" ANTHROPIC_MODEL=deepseek-chat     ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat claude "$@"; }
+claude-dsr()      { ANTHROPIC_BASE_URL=http://31.97.35.212:8000 ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_TOKEN" ANTHROPIC_MODEL=deepseek-reasoner ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat claude "$@"; }
 # <<< claude-code-free <<<
 BLOCK
 echo "Installed provider commands into $RC"
