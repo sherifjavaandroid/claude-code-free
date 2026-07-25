@@ -1,0 +1,4 @@
+# never commit tokens
+*.token
+*.local
+.env
