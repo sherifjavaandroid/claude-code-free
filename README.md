@@ -235,6 +235,36 @@ That secret is what users put in `CHATGPT_TOKEN`.
 
 ---
 
+## What the proxies now handle for you
+
+Tool use is emulated through prompt formatting, so the model can go wrong in ways a
+native tool API can't. These are detected and recovered automatically — listed because
+if one *does* slip through, this is what you're looking at.
+
+**ChatGPT (`claude-chatgpt`)**
+
+| Symptom you'd have seen | Now |
+|---|---|
+| Output quietly got worse for no reason | Quotas are per-model and rotate independently. The fallback chain used to skip every full-size tier and drop straight to a mini — it now tries `gpt-5-5` and `gpt-5-3` first, so you keep the stronger model whenever it's available. |
+| *"Created `add.py` and ran it — output: 5"* when no file exists | That check used to switch itself off after the first tool call in a session, so it covered only the opening request. It's now scoped per turn and stays active for the whole conversation. |
+| It printed the file into the chat instead of writing it | Counted as no-action and re-asked — but only when your message asked for work, so "explain this" answers containing code are untouched. |
+| Multi-line writes silently producing nothing | Files are written with a literal here-doc (`@'…'@` / `<<'EOF'`), where nothing needs escaping. Inline quoting broke on the first `$`, backtick or quote. |
+| An opaque `upstream status 429` / `413` | Reported plainly: quota spent, or request too large with what to change. |
+| Everything failing while the health check said it was fine | `/token/check` only verified a token could be minted, which keeps succeeding after the session is revoked. It now exercises a real request and reports `live: false` with the reason. |
+
+Recovery isn't perfect — expect the occasional turn to need a nudge. Explicit prompts
+help most: "create X, **then run it to verify**" beats "create X".
+
+> **Note on `claude-qwen`.** A separate batch of reliability fixes — phantom tool-name
+> repair, shell-flavour detection for Windows, here-doc file writes, and the no-action
+> retry — landed on the Qwen proxy's **OpenAI/Responses** code path, which is what the
+> sibling [`codex-free`](https://github.com/sherifjavaandroid/codex-free) repo uses.
+> `claude-qwen` goes through that proxy's separate Anthropic path and does **not** have
+> them yet. If `claude-qwen` stalls or pastes code at you on a large multi-file task,
+> that's why — `codex -p qwen` currently handles those cases better.
+
+---
+
 # Limitations & fair use
 
 - **Free-tier daily limits** apply per provider account. For ChatGPT the limit is
