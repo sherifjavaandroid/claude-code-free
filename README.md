@@ -16,7 +16,7 @@ provider — nothing is shared or stored.
 | `claude-kimi` | Kimi | Kimi | |
 | `claude-deepseek` | DeepSeek Chat | DeepSeek | |
 | `claude-dsr` | DeepSeek Reasoner (thinking) | DeepSeek | |
-| `claude-chatgpt` | GPT-5.4 Thinking Mini (`gpt-5-4-t-mini`) | ChatGPT | 262k |
+| `claude-chatgpt` | GPT-5.4 Thinking Mini (`gpt-5-4-t-mini`) | ChatGPT | ~24k\* |
 
 > **ChatGPT works differently from the other three.** ChatGPT is behind
 > Cloudflare and needs a full browser **cookie jar**, not a single token, so the
@@ -25,6 +25,12 @@ provider — nothing is shared or stored.
 > **access key**, not your own account token: ask whoever runs the server, or
 > [self-host](#self-host-the-proxies) and set your own. The other three forward
 > your personal token and share nothing.
+>
+> \* The model's own window is 262k, but the usable figure is far lower: ChatGPT's
+> backend rejects large request bodies with **413** (measured — 100k chars fine,
+> 150k rejected), which is a *transport* limit and has nothing to do with context.
+> The proxy compresses the tool definitions to fit and drops the oldest turns when
+> it has to, so long sessions lose early history. `/compact` early on long tasks.
 
 ---
 
@@ -89,9 +95,72 @@ claude-chatgpt     # ChatGPT — GPT-5.4 Thinking Mini, 262k context
 | Plain `claude` shows a **"Select login method"** screen | plain `claude` has no proxy configured | Don't run `claude` directly — use **`claude-qwen`** / `claude-kimi` / `claude-deepseek`; those set the backend + token before launching. |
 | First run shows a theme / "trust this folder" prompt | normal Claude Code onboarding | Accept it — it appears once. |
 | `unauthorized` / auth error mid-session | token expired or wrong | Grab a fresh token and update the env var (see below). |
-| `claude-chatgpt` returns **401 invalid api key** | `CHATGPT_TOKEN` isn't the proxy's access key | It is *not* a browser token — get the key from whoever runs the server, or set `CHATGPT_API_KEY` on your own deployment. |
-| `claude-chatgpt` says **"session not authenticated"** | the server's ChatGPT cookies expired | Whoever runs the server re-exports `cookies.txt`; it's re-read per request, no restart needed. |
-| `claude-chatgpt` says **"You've hit your limit"** | that ChatGPT account is rate-limited | Wait it out, or switch provider. The proxy already falls back to lighter models automatically. |
+| anything wrong with **`claude-chatgpt`** | ChatGPT is the odd one out — server-side session, shared quota | See [Troubleshooting `claude-chatgpt`](#troubleshooting-claude-chatgpt) below |
+
+---
+
+# Troubleshooting `claude-chatgpt`
+
+ChatGPT has failure modes the other three don't, because its session lives on the
+server rather than being your own forwarded token.
+
+## `401 invalid api key`
+
+`CHATGPT_TOKEN` isn't the proxy's access key. It is **not** a browser token — there
+is nothing to copy from DevTools. Get the key from whoever runs the server, or set
+`CHATGPT_API_KEY` on your own deployment.
+
+Check what you have, and test it without launching Claude Code at all:
+```bash
+echo ${#CHATGPT_TOKEN}          # length; 5 means the old "local" placeholder
+curl -si http://31.97.35.212:8002/v1/models -H "x-api-key: $CHATGPT_TOKEN" | head -1
+```
+```powershell
+[Environment]::GetEnvironmentVariable('CHATGPT_TOKEN','User').Length
+(Invoke-WebRequest "http://31.97.35.212:8002/v1/models" `
+  -Headers @{ "x-api-key" = [Environment]::GetEnvironmentVariable('CHATGPT_TOKEN','User') } `
+  -UseBasicParsing).StatusCode
+```
+`200` means the key is good; `401` means it's wrong.
+
+**Stale-token note.** On **Windows**, `claude-chatgpt` reads the token from the User
+environment *every time it runs*, so updating it takes effect immediately — no new
+terminal needed. On **macOS/Linux** the function reads the shell's `$CHATGPT_TOKEN`,
+so after changing it you must `source ~/.zshrc` (or `~/.bashrc`) or open a new
+terminal. (Codex, in the sibling `codex-free` repo, reads the process environment on
+every platform and *does* need a fresh terminal — a common source of confusion if you
+use both.)
+
+## `session not authenticated`
+
+The server's ChatGPT cookies expired. Only the server operator can fix it, by
+re-exporting `cookies.txt`; it's re-read per request, so no restart is needed.
+
+## `rate limited by ChatGPT ... the account's quota is spent`
+
+That ChatGPT account hit its free-tier cap, and it is **shared by everyone using that
+server**. The proxy already falls back from the premium slugs to the mini tiers
+automatically, so seeing this means every tier is exhausted. Wait, or switch provider
+(`claude-qwen`, `claude-deepseek`).
+
+## `request too large for ChatGPT (HTTP 413)`
+
+The conversation outgrew ChatGPT's request-body limit — which is a *transport* limit,
+unrelated to the model's context window. Run `/compact` or `/clear` and continue.
+
+## It says it did something it didn't
+
+e.g. *"Created `add.py` and ran it — output: 5"* when no file exists. The GPT-5 models
+do this more than the other providers; the proxy detects most cases and silently
+re-asks, but it isn't perfect. If a result looks suspiciously tidy, verify the file
+actually changed. Explicit prompts help: "create X, **then run it to verify**" works
+far better than "create X".
+
+## Does it fill up my chatgpt.com history?
+
+No. Each request opens a new upstream conversation, which would otherwise add a
+sidebar entry *per request*, so the proxy marks them as not-saved — they never appear
+in the sidebar and 404 on direct fetch. It also opts those turns out of training.
 
 ---
 
