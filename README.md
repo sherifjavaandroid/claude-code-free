@@ -151,10 +151,13 @@ That secret is what users put in `CHATGPT_TOKEN`.
   shared across everyone using that server, and the strongest slugs (`gpt-5-5`,
   `gpt-5-3`) are usually exhausted on a free account — hence the mini default.
 - **Tool use is emulated** through prompt formatting — great for most tasks, not
-  perfect on very long agent runs (retry or simplify). The GPT-5 models are the
-  most prone to answering "I can't access your filesystem" instead of calling a
-  tool; the ChatGPT proxy detects that and re-asks, but it can still slip
-  through occasionally.
+  perfect on very long agent runs (retry or simplify). The GPT-5 models behind
+  `claude-chatgpt` are the most prone to answering without calling a tool at all
+  — refusing ("I can't access your filesystem"), narrating ("I'll check that"),
+  or even reporting work they never did ("Created add.py, output: 5"). The proxy
+  detects these and re-asks, which recovers most of them, but expect the
+  occasional turn to need a nudge. Prefer explicit prompts ("run `python add.py`
+  to verify") over open-ended ones.
 - **Experimental**: these are unofficial reverse-proxies of each provider's web
   app and an emulated Anthropic endpoint; behavior can differ from the real
   Anthropic API. Use your own account and don't abuse it.
