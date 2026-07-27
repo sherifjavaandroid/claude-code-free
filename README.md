@@ -80,7 +80,7 @@ claude-qwen        # Qwen3-Coder
 claude-kimi        # Kimi
 claude-deepseek    # DeepSeek Chat
 claude-dsr         # DeepSeek Reasoner (thinking)
-claude-chatgpt     # ChatGPT — GPT-5.4 Thinking Mini, 262k context
+claude-chatgpt     # ChatGPT — GPT-5.4 Thinking Mini
 ```
 
 ---
@@ -147,6 +147,27 @@ automatically, so seeing this means every tier is exhausted. Wait, or switch pro
 
 The conversation outgrew ChatGPT's request-body limit — which is a *transport* limit,
 unrelated to the model's context window. Run `/compact` or `/clear` and continue.
+
+## Output is poor / it only writes a minimal prototype
+
+Not a bug — you're being served a **mini** model. Quotas are per-model on a free
+ChatGPT account, and the full-size tiers (`gpt-5-5`, `gpt-5-3`, `gpt-5-4-t-mini`)
+exhaust quickly. When they're all spent the gateway falls back to `gpt-5-5-mini`,
+which stays available but produces noticeably thinner work — a 100-line prototype
+where you asked for a polished app.
+
+Nothing errors when this happens; the only symptom is that the output gets worse.
+To confirm, the server operator can check `pm2 logs chatgpt`, where a
+`You've hit your limit` line appears for each blocked tier.
+
+What to do:
+
+- **Wait.** The tiers recover independently, often within hours.
+- **Use a coder model for heavy code generation.** `claude-qwen` (Qwen3-Coder) is
+  purpose-built for it and has a 1M context, so it beats a ChatGPT mini at this by
+  a wide margin. ChatGPT is the better pick for reasoning and small edits.
+- **Ask in smaller steps.** "Add a login modal to index.html" lands reliably;
+  "build me a complete YouTube clone with the best UI" does not, on any tier.
 
 ## It says it did something it didn't
 
