@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Claude Code Free installer (macOS / Linux) — Qwen / Kimi / DeepSeek
+# Claude Code Free installer (macOS / Linux) — Qwen / Kimi / DeepSeek / ChatGPT
 # Run from the repo folder:  bash install.sh
 set -e
 
-echo "== Claude Code Free installer (Qwen / Kimi / DeepSeek) =="
+echo "== Claude Code Free installer (Qwen / Kimi / DeepSeek / ChatGPT) =="
 
 # 0) Ensure Node.js / npm
 if ! command -v npm >/dev/null 2>&1; then
@@ -41,6 +41,7 @@ claude-qwen()     { ANTHROPIC_BASE_URL=http://31.97.35.212:8001 ANTHROPIC_AUTH_T
 claude-kimi()     { ANTHROPIC_BASE_URL=http://31.97.35.212:8066 ANTHROPIC_AUTH_TOKEN="$KIMI_TOKEN"     ANTHROPIC_MODEL=kimi             ANTHROPIC_SMALL_FAST_MODEL=kimi             claude "$@"; }
 claude-deepseek() { ANTHROPIC_BASE_URL=http://31.97.35.212:8000 ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_TOKEN" ANTHROPIC_MODEL=deepseek-chat     ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat claude "$@"; }
 claude-dsr()      { ANTHROPIC_BASE_URL=http://31.97.35.212:8000 ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_TOKEN" ANTHROPIC_MODEL=deepseek-reasoner ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat claude "$@"; }
+claude-chatgpt()  { ANTHROPIC_BASE_URL=http://31.97.35.212:8002 ANTHROPIC_AUTH_TOKEN="$CHATGPT_TOKEN"  ANTHROPIC_MODEL=gpt-5-4-t-mini    ANTHROPIC_SMALL_FAST_MODEL=gpt-5-5-mini  claude "$@"; }
 # <<< claude-code-free <<<
 BLOCK
 echo "Installed provider commands into $RC"
@@ -51,15 +52,20 @@ echo "Get each token from your browser (F12 > Application > Local Storage):"
 echo "  Qwen     -> chat.qwen.ai      -> key 'token'"
 echo "  Kimi     -> kimi.com          -> key 'refresh_token'"
 echo "  DeepSeek -> chat.deepseek.com -> key 'userToken' (copy its 'value')"
+echo "  ChatGPT  -> not a browser token: the access key for the ChatGPT proxy"
+echo "              (ask whoever runs the server, or set your own CHATGPT_API_KEY"
+echo "               when self-hosting github.com/sherifjavaandroid/chat-gpt)"
 echo "Leave blank to keep the current value."
 echo ""
 add_var () { [ -z "$2" ] && return; grep -v "^export $1=" "$RC" > "$RC.tmp" 2>/dev/null || true; mv "$RC.tmp" "$RC" 2>/dev/null || true; echo "export $1=\"$2\"" >> "$RC"; export "$1"="$2"; }
 read -r -p "QWEN_TOKEN: " q;     add_var QWEN_TOKEN "$q"
 read -r -p "KIMI_TOKEN: " k;     add_var KIMI_TOKEN "$k"
 read -r -p "DEEPSEEK_TOKEN: " d; add_var DEEPSEEK_TOKEN "$d"
+read -r -p "CHATGPT_TOKEN: " c;  add_var CHATGPT_TOKEN "$c"
 
 echo ""
 echo "Done! Restart your terminal (or 'source $RC'), then:"
 echo "  claude-qwen       # Qwen3-Coder"
 echo "  claude-kimi       # Kimi"
 echo "  claude-deepseek   # DeepSeek"
+echo "  claude-chatgpt    # ChatGPT (GPT-5.4 Thinking Mini)"
